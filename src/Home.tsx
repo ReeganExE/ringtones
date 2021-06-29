@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/media-has-caption */
-import { SyntheticEvent, useCallback, useRef, useState } from 'react'
+import { FC, SyntheticEvent, useCallback, useRef, useState } from 'react'
 import { useAsync } from 'react-async-hook'
 import styled from 'styled-components'
 
@@ -42,7 +42,8 @@ function Body(): JSX.Element {
             <RingtoneContainer onPlay={onPlay}>
               <IndexSpan>#{idx + 1}</IndexSpan>
               <h5>{r.title}</h5>
-              <audio controls src={r.meta.previewUrl} />
+              <Download url={r.meta.previewUrl} />
+              <AudioTrack src={r.meta.previewUrl} />
             </RingtoneContainer>
           </div>
         </div>
@@ -57,6 +58,40 @@ function Body(): JSX.Element {
     </>
   )
 }
+
+const AudioTrack: FC<{ src: string }> = ({ src }) => {
+  const [paused, update] = useState<boolean>(true)
+  const ref = useRef<HTMLAudioElement>(null)
+  const onClick = useCallback(() => {
+    const au = ref.current
+    if (au) {
+      au.paused ? au.play() : au.pause()
+    }
+  }, [])
+  const onChange = useCallback((e: SyntheticEvent<HTMLAudioElement>) => {
+    update(e.currentTarget.paused)
+  }, [])
+
+  const icon = paused ? '/play.svg' : '/pause.svg'
+  return (
+    <>
+      <button
+        onClick={onClick}
+        type="button"
+        className="btn btn-floating btn-sm btn-slack waves-effect waves-light ms-5"
+      >
+        <img src={process.env.PUBLIC_URL + icon} alt="Play" />
+      </button>
+
+      <audio ref={ref} src={src} onPlay={onChange} onPause={onChange} />
+    </>
+  )
+}
+const Download: FC<{ url: string }> = ({ url }) => (
+  <a href={url} download title="Download">
+    <img src={process.env.PUBLIC_URL + '/d.svg'} alt="Download" /> <small> Download</small>
+  </a>
+)
 
 function Loading(): JSX.Element {
   return (
@@ -113,11 +148,11 @@ const RingtoneContainer = styled.div`
   border-radius: 4px;
   position: relative;
   &.played {
-    background: #26c6da;
-    color: white;
-    ${IndexSpan} {
-      color: #e0e0e0;
-    }
+    background: #eeeeee;
+  }
+
+  a {
+    text-decoration: none;
   }
 `
 const Container = styled.div`
